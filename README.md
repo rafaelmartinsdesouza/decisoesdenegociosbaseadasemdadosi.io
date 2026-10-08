@@ -1,0 +1,1 @@
+# decisoesdenegociosbaseadasemdadosi.io
