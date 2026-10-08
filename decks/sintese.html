@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>De Árvores a Fundações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{--bg:#0B0E1A;--bar:#151A2C;--ink:#E6E8F2;--muted:#9AA0B9;--line:#2A3049;--acc:#8E9CFF;--mark:#F0B455}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,sans-serif}
+body{overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%;height:100dvh}
+#view{flex:1;position:relative;min-height:0;overflow:hidden;cursor:pointer;touch-action:pan-y}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;box-shadow:0 10px 40px rgba(0,0,0,.45)}
+#stage>section{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility 0s linear .25s}
+#stage>section.on{opacity:1;visibility:visible;transition:opacity .25s ease}
+#stage section,#stage section *{box-sizing:border-box;margin:0}
+#stage section ul,#stage section ol{padding-left:1.2em}
+#stage section table{border-collapse:collapse;width:100%}
+#stage section th,#stage section td{padding:.35em .6em;text-align:left;vertical-align:top;border-bottom:1px solid rgba(127,135,160,.35)}
+#stage section th{font-weight:600}
+#stage section aside{display:none}
+#bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bar);border-top:1px solid var(--line);font-size:14px;position:relative}
+#prog{position:absolute;left:0;top:-1px;height:3px;background:var(--mark);transition:width .25s}
+#title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+#bar button,#bar select{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+#bar button:hover,#bar select:hover{border-color:var(--acc)}
+#bar button[aria-pressed="true"]{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+#bar :focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+#count{font-family:'JetBrains Mono',ui-monospace,monospace;color:var(--muted);min-width:64px;text-align:center}
+#jump{max-width:240px}
+#jump option{background:var(--bar)}
+#notes{display:none;max-height:28vh;overflow:auto;padding:12px 16px;background:#11152A;border-top:1px solid var(--line);font-family:'Literata',Georgia,serif;font-size:16px;line-height:1.55;color:#C9CDE0}
+#notes.open{display:block}
+#notes b{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mark);display:block;margin-bottom:4px}
+.hide-sm{}
+@media (max-width:640px){.hide-sm{display:none}#jump{max-width:120px}#bar{gap:6px;padding:6px 8px}}
+:fullscreen #bar{opacity:.0;transition:opacity .3s}
+:fullscreen #bar:hover,:fullscreen #bar:focus-within{opacity:1}
+@media print{
+  @page{size:1920px 1080px;margin:0}
+  html,body{height:auto;overflow:visible;background:#fff}
+  #app{display:block;height:auto}
+  #bar,#notes{display:none!important}
+  #view{overflow:visible}
+  #stage{position:static;transform:none!important;box-shadow:none;height:auto}
+  #stage>section{position:relative;opacity:1;visibility:visible;break-after:page;page-break-after:always}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<main id="view" aria-label="Slides">
+<div id="stage">
+<section data-title="De Árvores → a Fundações" id="cover" data-transition="fade" style="background:#151A2C;color:#F4F6FA;font-family:'Literata', Georgia, serif;padding:128px;display:flex;flex-direction:column;justify-content:space-between">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:26px;letter-spacing:4px;text-transform:uppercase;color:#F0B455">Aprendizado de Máquina · síntese do curso</p>
+<div style="display:flex;flex-direction:column;gap:32px">
+<h1 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:150px;font-weight:800;line-height:1.0;letter-spacing:-3px;color:#F4F6FA">De Árvores <span style="color:#F0B455">→</span><br>a Fundações</h1>
+<p style="font-size:40px;line-height:1.35;color:#BFC5DA;width:1300px">Onze aulas, uma linha de raciocínio: dos fundamentos do aprendizado de máquina aos modelos que preveem séries que nunca viram.</p>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:end">
+<p style="font-size:30px;color:#F4F6FA">Prof. Rafael Martins de Souza</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#9AA0B9">FGV EPGE · FGV CERI · UERJ</p>
+</div>
+<aside>Este deck resume as aulas 1 a 9, que seguem os nove capítulos iniciais do Géron (Hands-On Machine Learning, 3ª ed.), e as aulas de RNNs, LSTMs e modelos de fundação para séries temporais.</aside>
+</section>
+<section data-title="Cada aula responde a um problema" id="fio" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">O fio condutor</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">Cada aula responde a um problema</h2>
+</div>
+<table style="font-size:24px;color:#151A2C">
+<tr><th style="width:8%;color:#5B627A">Aula</th><th style="width:30%;color:#5B627A">Técnica</th><th style="width:62%;color:#5B627A">O problema que ela responde</th></tr>
+<tr><td>1</td><td><b>O cenário do ML</b></td><td>Escrever regras à mão não escala para problemas complexos</td></tr>
+<tr><td>2</td><td><b>Projeto de ponta a ponta</b></td><td>Um modelo só tem valor dentro de um projeto completo</td></tr>
+<tr><td>3</td><td><b>Classificação</b></td><td>A acurácia engana quando as classes são desbalanceadas</td></tr>
+<tr><td>4</td><td><b>Treinando modelos</b></td><td>É preciso entender o que acontece dentro do fit</td></tr>
+<tr><td>5</td><td><b>SVMs</b></td><td>Queremos a fronteira mais robusta entre as classes</td></tr>
+<tr><td>6</td><td><b>Árvores de decisão</b></td><td>Precisamos de um modelo que qualquer pessoa consiga ler</td></tr>
+<tr><td>7</td><td><b>Ensembles</b></td><td>Uma árvore sozinha varia demais com os dados</td></tr>
+<tr><td>8</td><td><b>Redução de dimensão</b></td><td>Com muitos atributos, os dados ficam esparsos e distantes</td></tr>
+<tr><td>9</td><td><b>Clusterização</b></td><td>Nem sempre existem rótulos para aprender</td></tr>
+<tr><td>10</td><td><b>RNN, LSTM, GRU</b></td><td>Os dados têm ordem no tempo, e o passado distante importa</td></tr>
+<tr><td>11</td><td><b>Modelos de fundação</b></td><td>Treinar um modelo para cada série é caro e exige dados</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 2</p>
+<aside>Use este slide como mapa. As aulas 1 a 9 seguem os nove capítulos iniciais do Géron; as duas últimas vão além do livro. A partir da aula 6, cada técnica responde a um limite da anterior.</aside>
+</section>
+<section data-title="Três perguntas classificam qualquer sistema" id="panorama" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Aula 1 · O cenário do aprendizado de máquina</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">Três perguntas classificam qualquer sistema</h2>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">há rótulos?</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">Supervisão</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Supervisionado, não supervisionado, semissupervisionado ou por reforço, como no AlphaGo.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">aprende em produção?</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">Batch ou online</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Batch treina com tudo, offline. Online aprende aos poucos com dados novos.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">como generaliza?</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">Instância ou modelo</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Compara com exemplos memorizados, ou ajusta parâmetros de um modelo.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#4A5068;width:1550px">Mitchell (1997): um programa aprende com a experiência E numa tarefa T, medida por P, se seu desempenho em T, medido por P, melhora com E.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 3</p>
+<aside>Arthur Samuel, 1959: o campo que dá aos computadores a habilidade de aprender sem serem explicitamente programados. Principais desafios da aula: dados insuficientes, não representativos ou de baixa qualidade, atributos irrelevantes, sobreajuste e subajuste. Erro de treino baixo com erro de generalização alto é sobreajuste.</aside>
+</section>
+<section data-title="Oito passos, do problema à produção" id="projeto" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Aula 2 · Projeto de ponta a ponta</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">Oito passos, do problema à produção</h2>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:24px">
+<div style="display:flex;flex-direction:column;gap:10px;border-top:4px solid #2C3EBF;padding:20px 0 0 0"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">1</p><h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:32px;font-weight:700;color:#151A2C">Enquadrar</h3><p style="font-size:24px;line-height:1.4;color:#4A5068">Objetivo de negócio e medida de desempenho</p></div>
+<div style="display:flex;flex-direction:column;gap:10px;border-top:4px solid #2C3EBF;padding:20px 0 0 0"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">2</p><h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:32px;font-weight:700;color:#151A2C">Obter dados</h3><p style="font-size:24px;line-height:1.4;color:#4A5068">E separar o teste antes de olhar</p></div>
+<div style="display:flex;flex-direction:column;gap:10px;border-top:4px solid #2C3EBF;padding:20px 0 0 0"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">3</p><h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:32px;font-weight:700;color:#151A2C">Explorar</h3><p style="font-size:24px;line-height:1.4;color:#4A5068">Atributos, correlações, combinações</p></div>
+<div style="display:flex;flex-direction:column;gap:10px;border-top:4px solid #2C3EBF;padding:20px 0 0 0"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">4</p><h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:32px;font-weight:700;color:#151A2C">Preparar</h3><p style="font-size:24px;line-height:1.4;color:#4A5068">Limpeza, escala e pipelines em funções</p></div>
+<div style="display:flex;flex-direction:column;gap:10px;border-top:4px solid #E39A2D;padding:20px 0 0 0"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#A86A12">5</p><h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:32px;font-weight:700;color:#151A2C">Selecionar</h3><p style="font-size:24px;line-height:1.4;color:#4A5068">Vários modelos e validação cruzada</p></div>
+<div style="display:flex;flex-direction:column;gap:10px;border-top:4px solid #E39A2D;padding:20px 0 0 0"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#A86A12">6</p><h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:32px;font-weight:700;color:#151A2C">Ajustar</h3><p style="font-size:24px;line-height:1.4;color:#4A5068">Busca aleatória, ensembles, teste final</p></div>
+<div style="display:flex;flex-direction:column;gap:10px;border-top:4px solid #E39A2D;padding:20px 0 0 0"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#A86A12">7</p><h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:32px;font-weight:700;color:#151A2C">Apresentar</h3><p style="font-size:24px;line-height:1.4;color:#4A5068">Panorama, resultados e limitações</p></div>
+<div style="display:flex;flex-direction:column;gap:10px;border-top:4px solid #E39A2D;padding:20px 0 0 0"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#A86A12">8</p><h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:32px;font-weight:700;color:#151A2C">Lançar</h3><p style="font-size:24px;line-height:1.4;color:#4A5068">Monitorar, alertar e retreinar</p></div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#4A5068;width:1550px">Na prática, a maior parte do tempo vai para obter e preparar dados. Automatize o que puder: modelos envelhecem à medida que os dados mudam.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 4</p>
+<aside>É o checklist do Apêndice A, aplicado ao exemplo dos preços de imóveis da Califórnia. Pontos para enfatizar: separar o teste cedo para evitar data snooping; escrever cada transformação como função ou Pipeline; validação cruzada em vez do erro de treino; preferir busca aleatória à busca em grade quando há muitos hiperparâmetros.</aside>
+</section>
+<section data-title="Mais de 90% de acurácia sem detectar um único 5" id="classificacao" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Aula 3 · Classificação</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">Mais de 90% de acurácia sem detectar um único 5</h2>
+</div>
+<div style="display:flex;gap:56px;align-items:start">
+<div style="flex:1;display:flex;flex-direction:column;gap:20px">
+<p style="font-size:30px;line-height:1.4;color:#4A5068">No MNIST, só cerca de 10% das imagens são cincos. Quem sempre responde "não é 5" acerta mais de 90%. A matriz de confusão mostra o que a acurácia esconde.</p>
+<table style="font-size:28px;color:#151A2C;font-family:'JetBrains Mono', 'Courier New', monospace">
+<tr><th style="width:34%;color:#5B627A"></th><th style="width:33%;color:#5B627A;text-align:center">prevê não 5</th><th style="width:33%;color:#5B627A;text-align:center">prevê 5</th></tr>
+<tr><td style="color:#5B627A">real não 5</td><td style="text-align:center">TN</td><td style="text-align:center">FP</td></tr>
+<tr><td style="color:#5B627A">real 5</td><td style="text-align:center">FN</td><td style="text-align:center">TP</td></tr>
+</table>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:24px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:44px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:32px;font-weight:600;color:#2C3EBF">precisão = TP / (TP + FP)</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:32px;font-weight:600;color:#2C3EBF">revocação = TP / (TP + FN)</p>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Subir o limiar de decisão aumenta a precisão e reduz a revocação. Escolha o limiar pelo custo de cada erro.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 5</p>
+<aside>F1 é a média harmônica de precisão e revocação. A curva ROC traça a taxa de verdadeiros positivos contra a de falsos positivos; prefira a curva precisão–revocação quando os positivos são raros. Também na aula: multiclasse com OvR e OvO, análise de erros pela matriz de confusão normalizada, multirrótulo e multissaída.</aside>
+</section>
+<section data-title="Duas formas de achar θ, e como não exagerar" id="treino" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Aula 4 · Treinando modelos</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">Duas formas de achar θ, e como não exagerar</h2>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:40px;font-weight:700;color:#151A2C">Equação normal</h3>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:28px;font-weight:600;color:#2C3EBF">θ̂ = (XᵀX)⁻¹Xᵀy</p>
+<p style="font-size:26px;line-height:1.4;color:#4A5068">Solução fechada. Cara com muitos atributos: O(n²·⁴) a O(n³).</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:40px;font-weight:700;color:#151A2C">Gradiente descendente</h3>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:28px;font-weight:600;color:#2C3EBF">θ ← θ − η∇MSE(θ)</p>
+<p style="font-size:26px;line-height:1.4;color:#4A5068">η pequeno é lento, grande diverge. Batch, estocástico ou mini-batch. Escale os atributos.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:40px;font-weight:700;color:#151A2C">Regularização</h3>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:28px;font-weight:600;color:#2C3EBF">Ridge · Lasso · Elastic Net</p>
+<p style="font-size:26px;line-height:1.4;color:#4A5068">ℓ2, ℓ1 que zera pesos, ou a mistura. Early stopping para no mínimo da validação.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#4A5068;width:1550px">Viés causa subajuste; variância causa sobreajuste; o erro irredutível vem do ruído. As curvas de aprendizado mostram qual é o seu caso.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 6</p>
+<aside>Também na aula: regressão polinomial com PolynomialFeatures; regressão logística, que estima probabilidades com a sigmoide e treina pela log loss; e regressão softmax para várias classes, treinada pela entropia cruzada. Nas curvas de aprendizado, erros altos e próximos indicam subajuste; distância grande entre treino e validação indica sobreajuste.</aside>
+</section>
+<section data-title="A rua mais larga entre as classes" id="svm" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Aula 5 · Máquinas de vetores de suporte</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">A rua mais larga entre as classes</h2>
+</div>
+<div style="display:flex;gap:56px;align-items:start">
+<div style="flex:1;display:flex;flex-direction:column;gap:28px">
+<p style="font-size:30px;line-height:1.4;color:#151A2C"><b>Vetores de suporte:</b> só as instâncias na borda da rua definem a fronteira.</p>
+<p style="font-size:30px;line-height:1.4;color:#151A2C"><b>C:</b> grande estreita a rua e tolera poucas violações; pequeno alarga a rua e regulariza.</p>
+<p style="font-size:30px;line-height:1.4;color:#151A2C"><b>Kernels:</b> polinomial e RBF criam fronteiras não lineares sem construir os atributos.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#151A2C;border-radius:16px;padding:44px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#F0B455">margem suave</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:30px;font-weight:600;line-height:1.5;color:#F4F6FA">min ½‖w‖² + C Σ ζ⁽ⁱ⁾<br>t⁽ⁱ⁾(wᵀx⁽ⁱ⁾ + b) ≥ 1 − ζ⁽ⁱ⁾</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#F0B455">truque do kernel</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:30px;font-weight:600;color:#F4F6FA">K(a, b) = φ(a)ᵀφ(b)</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 7</p>
+<aside>SVMs são sensíveis à escala: escale antes. No kernel RBF, γ alto deixa a fronteira irregular; se sobreajustar, reduza γ e C. LinearSVC escala perto de O(m × n); SVC com kernel fica entre O(m² × n) e O(m³ × n), bom para bases pequenas e médias. A regressão SVM inverte o objetivo: o máximo de instâncias dentro da rua, de largura ε. O problema dual só usa produtos internos, o que permite o truque do kernel.</aside>
+</section>
+<section data-title="O CART escolhe o corte que deixa os filhos mais puros" id="cart" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Aula 6 · Árvores de decisão</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">O CART escolhe o corte que deixa os filhos mais puros</h2>
+</div>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:44px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">Impureza de Gini de um nó</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:48px;font-weight:600;color:#2C3EBF">G = 1 − Σ pₖ²</p>
+<p style="font-size:30px;line-height:1.4;color:#4A5068">Zero quando todas as instâncias do nó são da mesma classe.</p>
+</div>
+<div style="flex:1.4;display:flex;flex-direction:column;gap:20px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:44px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">Custo de um corte (atributo k, limiar tₖ)</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:40px;font-weight:600;color:#2C3EBF">J = (m_esq/m)·G_esq + (m_dir/m)·G_dir</p>
+<p style="font-size:30px;line-height:1.4;color:#4A5068">Busca gulosa: o melhor corte agora, sem olhar os níveis de baixo. Só árvores binárias.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#4A5068">Prever custa O(log₂ m). Treinar custa O(n × m log₂ m). Na regressão, cada folha prevê a média dos alvos e o critério passa a ser o MSE.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 8</p>
+<aside>Exemplo para fazer à mão: um nó com 54 instâncias, 0 da classe A, 49 da B e 5 da C, tem Gini 1 − (49/54)² − (5/54)² ≈ 0,168. Gini e entropia geram árvores parecidas na maioria dos casos; Gini é um pouco mais rápido.</aside>
+</section>
+<section data-title="Fácil de ler, difícil de estabilizar" id="arvore-limites" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Aula 6 · Árvores de decisão</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">Fácil de ler, difícil de estabilizar</h2>
+</div>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:24px;border-top:6px solid #1E8556;padding:32px 0 0 0">
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#1E8556">A favor</h3>
+<p style="font-size:32px;line-height:1.4;color:#151A2C"><b>Caixa-branca:</b> as decisões podem ser seguidas à mão.</p>
+<p style="font-size:32px;line-height:1.4;color:#151A2C"><b>Pouco preparo:</b> dispensa escalonamento e centralização.</p>
+<p style="font-size:32px;line-height:1.4;color:#151A2C"><b>Probabilidades:</b> fração de cada classe na folha.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:24px;border-top:6px solid #BF3E37;padding:32px 0 0 0">
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#BF3E37">Contra</h3>
+<p style="font-size:32px;line-height:1.4;color:#151A2C"><b>Alta variância:</b> pequenas mudanças nos dados geram árvores muito diferentes.</p>
+<p style="font-size:32px;line-height:1.4;color:#151A2C"><b>Eixos:</b> só corta na perpendicular; dados girados viram escada.</p>
+<p style="font-size:32px;line-height:1.4;color:#151A2C"><b>Sobreajuste:</b> exige regularizar com max_* menores e min_* maiores.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 9</p>
+<aside>A alta variância é a ponte para a próxima aula: se uma árvore sozinha oscila muito, a média de muitas árvores oscila pouco. É exatamente o que uma floresta aleatória faz.</aside>
+</section>
+<section data-title="Classificadores fracos, maioria forte" id="multidao" data-transition="fade" style="background:#151A2C;color:#F4F6FA;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#F0B455">Aula 7 · A sabedoria das multidões</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#F4F6FA">Classificadores fracos, maioria forte</h2>
+</div>
+<div style="display:flex;gap:48px;align-items:end">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:150px;font-weight:800;line-height:1.0;color:#BFC5DA">51%</p>
+<p style="font-size:30px;line-height:1.4;color:#BFC5DA">acurácia de cada classificador</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:150px;font-weight:800;line-height:1.0;color:#F0B455">73,7%</p>
+<p style="font-size:30px;line-height:1.4;color:#BFC5DA">maioria de 1.001 votantes</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:150px;font-weight:800;line-height:1.0;color:#8E9CFF">97,7%</p>
+<p style="font-size:30px;line-height:1.4;color:#BFC5DA">maioria de 10.001 votantes</p>
+</div>
+</div>
+<p style="font-size:32px;line-height:1.4;color:#F4F6FA;width:1500px">O cálculo supõe erros independentes. Modelos treinados nos mesmos dados erram juntos, então o ganho real é menor. Por isso bagging, atributos sorteados e algoritmos diferentes ajudam: eles descorrelacionam os erros.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#9AA0B9">De Árvores a Fundações · 10</p>
+<aside>Números calculados pela distribuição binomial: probabilidade de mais da metade dos votantes acertar quando cada um acerta com 51%. A conexão com Superprevisões de Tetlock: agregar julgamentos diversos e independentes melhora a previsão.</aside>
+</section>
+<section data-title="Três maneiras de combinar modelos" id="ensembles" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Aula 7 · Ensembles</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">Três maneiras de combinar modelos</h2>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">em paralelo</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">Bagging</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Mesmo algoritmo em amostras com reposição. Cerca de 37% das instâncias ficam fora de cada amostra e dão a avaliação out-of-bag.</p>
+<p style="font-size:28px;line-height:1.4;color:#151A2C"><b>Random Forest, Extra-Trees</b></p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">em sequência</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">Boosting</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Cada modelo corrige o anterior: reponderando os erros (AdaBoost) ou ajustando os resíduos (Gradient Boosting).</p>
+<p style="font-size:28px;line-height:1.4;color:#151A2C"><b>XGBoost, HistGradientBoosting</b></p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">em camadas</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">Stacking</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Um modelo final aprende a combinar as previsões, feitas fora da amostra, dos modelos da primeira camada.</p>
+<p style="font-size:28px;line-height:1.4;color:#151A2C"><b>StackingClassifier</b></p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 11</p>
+<aside>Pontos para comentar: soft voting costuma superar hard voting porque pesa mais os votos confiantes. Na Random Forest cada nó considera só um subconjunto aleatório de atributos; nas Extra-Trees o limiar também é sorteado. No exemplo da aula, o oob_score_ do bagging deu 0,896.</aside>
+</section>
+<section data-title="Em alta dimensão, todo ponto é extremo e tudo fica longe" id="maldicao" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Aula 8 · A maldição da dimensionalidade</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">Em alta dimensão, todo ponto é extremo e tudo fica longe</h2>
+</div>
+<table style="font-size:28px;color:#151A2C;font-variant-numeric:tabular-nums">
+<tr><th style="width:34%;color:#5B627A">Hipercubo unitário</th><th style="width:36%;color:#5B627A;text-align:right">Chance de estar a menos de 0,001 da borda</th><th style="width:30%;color:#5B627A;text-align:right">Distância média entre dois pontos</th></tr>
+<tr><td>2 dimensões</td><td style="text-align:right">0,4%</td><td style="text-align:right">0,52</td></tr>
+<tr><td>3 dimensões</td><td style="text-align:right">0,6%</td><td style="text-align:right">0,66</td></tr>
+<tr><td>10.000 dimensões</td><td style="text-align:right">&gt; 99,999999%</td><td style="text-align:right">≈ 40,8</td></tr>
+<tr style="background:#E7EAFB"><td><b>1.000.000 dimensões</b></td><td style="text-align:right"><b>≈ 100%</b></td><td style="text-align:right"><b>≈ 408,25</b></td></tr>
+</table>
+<p style="font-size:30px;line-height:1.4;color:#4A5068;width:1500px">Novas instâncias ficam longe de todas as de treino, e prever vira extrapolar. Com só 100 atributos, cobrir o espaço exigiria mais instâncias que átomos no universo observável.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 12</p>
+<aside>A chance de estar perto da borda é 1 − 0,998 elevado a d. Para d grande, a distância média entre dois pontos aleatórios tende a raiz de d sobre 6: com d = 10.000 dá cerca de 40,8 e com d = 1.000.000 dá cerca de 408,25, o número da aula.</aside>
+</section>
+<section data-title="Qual técnica usar" id="reducao" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Aula 8 · Redução da dimensionalidade</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">Qual técnica usar</h2>
+</div>
+<table style="font-size:28px;color:#151A2C">
+<tr><th style="width:26%;color:#5B627A">Técnica</th><th style="width:44%;color:#5B627A">O que preserva</th><th style="width:30%;color:#5B627A">Quando usar</th></tr>
+<tr><td><b>PCA</b></td><td>A maior variância possível; minimiza o erro de projeção</td><td>Ponto de partida padrão</td></tr>
+<tr><td><b>PCA randomizado</b></td><td>Os d primeiros componentes, aproximados</td><td>d muito menor que n</td></tr>
+<tr><td><b>PCA incremental</b></td><td>O mesmo que o PCA, em mini-lotes</td><td>Dados fora da memória</td></tr>
+<tr><td><b>Projeção aleatória</b></td><td>Distâncias, pelo lema de Johnson–Lindenstrauss</td><td>Milhares de atributos</td></tr>
+<tr><td><b>LLE</b></td><td>Relações lineares entre vizinhos próximos</td><td>Variedades torcidas</td></tr>
+</table>
+<p style="font-size:30px;line-height:1.4;color:#4A5068;width:1500px">Para escolher d, some a razão de variância explicada até um alvo. Com <b>n_components=0.95</b>, o MNIST cai de 784 para cerca de 150 dimensões.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 13</p>
+<aside>Projeção funciona quando os dados vivem perto de um subespaço plano. Quando o subespaço é torcido, como no rolo suíço, projetar achata camadas diferentes; aí entra manifold learning, como o LLE. Outras técnicas citadas na aula: MDS, Isomap, t-SNE e LDA.</aside>
+</section>
+<section data-title="Três ideias de cluster" id="clusters" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Aula 9 · Aprendizado não supervisionado</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">Três ideias de cluster</h2>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">por centroide</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">K-Means</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Alterna atribuir ao centroide mais próximo e mover o centroide para a média. Rápido; supõe grupos esféricos.</p>
+<p style="font-size:28px;line-height:1.4;color:#151A2C"><b>Escolha k pela silhueta</b></p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">por densidade</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">DBSCAN</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Pontos com ao menos min_samples vizinhos no raio ε são centrais e formam clusters de qualquer forma.</p>
+<p style="font-size:28px;line-height:1.4;color:#151A2C"><b>O resto vira anomalia</b></p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">por probabilidade</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">Misturas gaussianas</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Supõe várias gaussianas e estima por EM. Densidade baixa sinaliza anomalia.</p>
+<p style="font-size:28px;line-height:1.4;color:#151A2C"><b>Escolha k pelo BIC ou AIC</b></p>
+</div>
+</div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:30px;color:#151A2C">silhueta s = (b − a) / max(a, b), de −1 a +1</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 14</p>
+<aside>A inércia sempre cai quando k aumenta, então não serve sozinha para escolher k. A silhueta compara a distância média ao próprio cluster (a) com a distância ao cluster vizinho mais próximo (b). Usos citados na aula: segmentação de clientes e de imagens, pré-processamento, aprendizado semissupervisionado e detecção de anomalias.</aside>
+</section>
+<section data-title="" id="gradiente" data-transition="fade" style="background:#2C3EBF;color:#F4F6FA;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#F0B455">RNNs · o gradiente que desaparece</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:96px;font-weight:600;line-height:1.1;color:#F4F6FA">∇(t=1) = ∇(t=5) × W⁴</p>
+<p style="font-size:40px;line-height:1.35;color:#E7EAFB;width:1400px">A cada passo de volta no tempo, o gradiente é multiplicado por W. Com |W| &lt; 1 e cem passos, ele chega ao início praticamente zero, e a rede esquece o passado distante.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#C7CEF5">De Árvores a Fundações · 15</p>
+<aside>Antes deste ponto a aula mostra a previsão de uma série com RNN simples. Com um neurônio e tanh, a saída fica presa em (−1, 1) e a série chega a 1,4; a correção foi 32 neurônios e uma camada densa de saída. Aqui está o problema mais profundo: sequências longas.</aside>
+</section>
+<section data-title="Somar em vez de multiplicar preserva o gradiente" id="portas" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">LSTM e GRU</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">Somar em vez de multiplicar preserva o gradiente</h2>
+</div>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:44px">
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">LSTM · 1997</h3>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:30px;font-weight:600;line-height:1.5;color:#2C3EBF">c(t) = f⊗c(t−1) + i⊗g<br>h(t) = o⊗tanh(c(t))</p>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Dois estados e três portas. Um quadro branco: a forget gate é o apagador, a input gate é a caneta, a output gate decide o que mostrar.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:44px">
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">GRU · 2014</h3>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:30px;font-weight:600;line-height:1.5;color:#2C3EBF">h(t) = (1 − z)⊗h(t−1)<br>       + z⊗h̃(t)</p>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Um estado e duas portas, reset e update. Um caderno único: menos parâmetros e treino mais rápido.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#4A5068">GRU para bases menores e treino rápido; LSTM para sequências muito longas com muitos dados. Na prática, teste as duas.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 16</p>
+<aside>Na LSTM, a derivada do cell state em relação ao anterior é f, que a rede pode manter perto de 1: é a via expressa no lugar da estrada com pedágios. Na GRU, na convenção da aula, z = 0 preserva toda a memória e z = 1 a substitui pelo candidato.</aside>
+</section>
+<section data-title="De um modelo por série a um modelo para todas" id="paradigma" data-transition="fade" style="background:#151A2C;color:#F4F6FA;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#F0B455">Modelos de fundação · a mudança de paradigma</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#F4F6FA">De um modelo por série a um modelo para todas</h2>
+</div>
+<div style="display:flex;gap:40px;align-items:stretch">
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;border:2px solid #3A4160;border-radius:16px;padding:44px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#9AA0B9">antes</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#BFC5DA">Um modelo específico</h3>
+<p style="font-size:30px;line-height:1.4;color:#BFC5DA">Uma LSTM treinada do zero para cada problema, com os dados daquele problema.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#F0B455;border-radius:16px;padding:44px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#151A2C">agora</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">Um modelo base</h3>
+<p style="font-size:30px;line-height:1.4;color:#151A2C">Pré-treinado em milhões de séries, sem rótulos, e adaptado a cada tarefa. Prevê até séries que nunca viu.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#BFC5DA"><b style="color:#F4F6FA">Escala</b> de bilhões de parâmetros · <b style="color:#F4F6FA">pré-treinamento</b> em dados não rotulados · <b style="color:#F4F6FA">emergência</b> de capacidades não ensinadas</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#9AA0B9">De Árvores a Fundações · 17</p>
+<aside>A mesma ideia já transformou linguagem, imagem, código e biologia. Em séries temporais, o modelo aprende padrões universais de domínios como energia, finanças e saúde. A ponte com a aula anterior: o Transformer de 2017 trocou a recorrência pela atenção, e é a base desses modelos.</aside>
+</section>
+<section data-title="Os três modelos de referência" id="modelos" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Modelos de fundação · 2024</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">Os três modelos de referência</h2>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">Google</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">TimesFM</h3>
+<p style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:56px;font-weight:800;color:#151A2C">100 bi</p>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">pontos temporais no pré-treino. Transformer só com decoder; previsões zero-shot.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">Amazon</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">Chronos</h3>
+<p style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:56px;font-weight:800;color:#151A2C">T5</p>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">como base. Escala e quantiza a série para tratá-la como tokens de linguagem.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;border:1px solid #DCE0EA;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#2C3EBF">Salesforce</p>
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;color:#151A2C">Moirai</h3>
+<p style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:56px;font-weight:800;color:#151A2C">27 bi</p>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">observações no treino. Lida com várias frequências e qualquer número de variáveis.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 18</p>
+<aside>Os três foram lançados em 2024. O TimesFM lê a série em blocos (patches). O Chronos gera previsões probabilísticas a partir dos tokens. O Moirai foi treinado no conjunto LOTSA.</aside>
+</section>
+<section data-title="A quantidade de dados decide a estratégia" id="quando" data-transition="fade" style="background:#F4F6FA;color:#151A2C;font-family:'Literata', Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#2C3EBF">Modelos de fundação · guia prático</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#151A2C">A quantidade de dados decide a estratégia</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:0">
+<div style="display:flex;gap:40px;align-items:center;border-top:2px solid #DCE0EA;padding:32px 0">
+<p style="flex:1;font-size:32px;line-height:1.3;color:#4A5068">Dados escassos, tarefa genérica</p>
+<p style="flex:1;font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:48px;font-weight:700;color:#2C3EBF">Zero-shot</p>
+<p style="flex:1.2;font-size:28px;line-height:1.4;color:#4A5068">Usa o modelo como está, sem treino</p>
+</div>
+<div style="display:flex;gap:40px;align-items:center;border-top:2px solid #DCE0EA;padding:32px 0">
+<p style="flex:1;font-size:32px;line-height:1.3;color:#4A5068">Dados limitados, tarefa específica</p>
+<p style="flex:1;font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:48px;font-weight:700;color:#2C3EBF">Fine-tuning</p>
+<p style="flex:1.2;font-size:28px;line-height:1.4;color:#4A5068">Retreina parte do modelo com seus dados; few-shot é o ajuste leve</p>
+</div>
+<div style="display:flex;gap:40px;align-items:center;border-top:2px solid #DCE0EA;border-bottom:2px solid #DCE0EA;padding:32px 0">
+<p style="flex:1;font-size:32px;line-height:1.3;color:#4A5068">Dados abundantes</p>
+<p style="flex:1;font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:48px;font-weight:700;color:#2C3EBF">Do zero</p>
+<p style="flex:1.2;font-size:28px;line-height:1.4;color:#4A5068">Modelo especializado, para o máximo desempenho</p>
+</div>
+</div>
+<p style="font-size:28px;line-height:1.4;color:#4A5068">Cuidados: custo computacional alto, interpretação difícil e vieses do pré-treino.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B627A">De Árvores a Fundações · 19</p>
+<aside>Mesmo com dados abundantes, vale rodar um modelo de fundação em zero-shot como baseline: ele mostra quanto o modelo próprio realmente acrescenta. Em qualquer cenário, compare também com um baseline ingênuo, como repetir o último valor.</aside>
+</section>
+<section data-title="Rode os códigos, faça os exercícios, escolha um conjunto de dados" id="fim" data-transition="fade" style="background:#151A2C;color:#F4F6FA;font-family:'Literata', Georgia, serif;padding:128px;display:flex;flex-direction:column;justify-content:space-between">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:26px;letter-spacing:4px;text-transform:uppercase;color:#F0B455">Experimente</p>
+<div style="display:flex;flex-direction:column;gap:36px">
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:96px;font-weight:800;line-height:1.05;letter-spacing:-2px;color:#F4F6FA">Rode os códigos, faça os exercícios, escolha um conjunto de dados</h2>
+<p style="font-size:36px;line-height:1.4;color:#BFC5DA;width:1400px">Cada módulo tem um explicador interativo, quiz e flashcards no <a href="https://claude.ai/artifact/WG7mrqWe8uxhTSoKgyAh7H" style="color:#F0B455">site do curso</a>.</p>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:end">
+<p style="font-size:30px;color:#F4F6FA">Rafael Martins de Souza</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:26px;color:#9AA0B9">rafael.souza@fgv.br</p>
+</div>
+<aside>Fecha com o mesmo convite das aulas originais: Try It Out. O site do curso precisa ser compartilhado pelo menu Share antes de os alunos conseguirem abrir o link.</aside>
+</section>
+</div>
+</main>
+<div id="notes" aria-live="polite"></div>
+<div id="bar">
+<div id="prog"></div>
+
+<span id="title">De Árvores a Fundações</span>
+<select id="jump" aria-label="Ir para o slide"></select>
+<button id="prev" type="button" aria-label="Slide anterior">‹</button>
+<span id="count"></span>
+<button id="next" type="button" aria-label="Próximo slide">›</button>
+<button id="nbtn" type="button" aria-pressed="false" title="Notas do apresentador (N)">Notas</button>
+<button id="fbtn" type="button" class="hide-sm" title="Tela cheia (F)">Tela cheia</button>
+<button id="pbtn" type="button" class="hide-sm" title="Imprimir ou salvar em PDF">PDF</button>
+</div>
+</div>
+<script>
+(function(){
+  var S=[].slice.call(document.querySelectorAll('#stage>section'));
+  var view=document.getElementById('view'), stage=document.getElementById('stage');
+  var cnt=document.getElementById('count'), prog=document.getElementById('prog');
+  var notes=document.getElementById('notes'), nbtn=document.getElementById('nbtn'), jump=document.getElementById('jump');
+  var i=0;
+  S.forEach(function(s,k){var o=document.createElement('option');o.value=k;o.textContent=(k+1)+' · '+(s.getAttribute('data-title')||'');jump.appendChild(o);});
+  function fit(){var w=view.clientWidth,h=view.clientHeight,pad=w<700?0:16;var sc=Math.min((w-2*pad)/1920,(h-2*pad)/1080);
+    var x=(w-1920*sc)/2,y=(h-1080*sc)/2;stage.style.transform='translate('+x+'px,'+y+'px) scale('+sc+')';}
+  function go(n,push){n=Math.max(0,Math.min(S.length-1,n));S[i].classList.remove('on');S[i].setAttribute('aria-hidden','true');
+    i=n;S[i].classList.add('on');S[i].removeAttribute('aria-hidden');
+    cnt.textContent=(i+1)+' / '+S.length;prog.style.width=((i+1)/S.length*100)+'%';jump.value=i;
+    var a=S[i].querySelector('aside');notes.innerHTML='<b>Notas do apresentador</b>'+(a&&a.textContent.trim()?a.innerHTML:'<i>Sem notas neste slide.</i>');
+    try{history.replaceState(null,'','#'+(i+1));}catch(e){}}
+  S.forEach(function(s){s.setAttribute('aria-hidden','true');});
+  var h=parseInt((location.hash||'').slice(1),10);i=0;go(isNaN(h)?0:h-1);
+  fit();addEventListener('resize',fit);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);
+  function toggleNotes(){var o=notes.classList.toggle('open');nbtn.setAttribute('aria-pressed',o);fit();}
+  function full(){if(document.fullscreenElement)document.exitFullscreen();else if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen();}
+  document.getElementById('prev').onclick=function(){go(i-1)};
+  document.getElementById('next').onclick=function(){go(i+1)};
+  nbtn.onclick=toggleNotes;
+  document.getElementById('fbtn').onclick=full;
+  document.getElementById('pbtn').onclick=function(){window.print()};
+  jump.onchange=function(){go(+jump.value);jump.blur();};
+  addEventListener('keydown',function(e){if(e.target===jump||e.altKey||e.ctrlKey||e.metaKey)return;var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'||k===' '||k==='Enter'){if(e.target.tagName==='BUTTON'&&(k===' '||k==='Enter'))return;e.preventDefault();go(i+1);}
+    else if(k==='ArrowLeft'||k==='PageUp'||k==='Backspace'){e.preventDefault();go(i-1);}
+    else if(k==='Home'){go(0);}else if(k==='End'){go(S.length-1);}
+    else if(k==='n'||k==='N'){toggleNotes();}else if(k==='f'||k==='F'){full();}});
+  view.addEventListener('click',function(e){if(getSelection&&String(getSelection()).length)return;var r=view.getBoundingClientRect();go(e.clientX-r.left<r.width/3?i-1:i+1);});
+  var x0=null,y0=null;view.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;y0=e.touches[0].clientY;},{passive:true});
+  view.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
+    if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)){go(dx<0?i+1:i-1);}x0=null;},{passive:true});
+  view.addEventListener('touchmove',function(){},{passive:true});
+})();
+</script>
+</body>
+</html>
